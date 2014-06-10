@@ -37,24 +37,23 @@ else
   bind_host = nil
 end
 
-my_templates  = {
-  'input_syslog' => 'config/input_syslog.conf.erb',
-  'output_stdout' => 'config/output_stdout.conf.erb',
-  'output_elasticsearch' => 'config/output_elasticsearch.conf.erb'
-}
+config_templates = node['logstash']['instance'][name]['config_templates']
 
-logstash_config name do
-  templates my_templates
-  action [:create]
-  variables(
-    elasticsearch_ip: ::Logstash.service_ip(node, name, 'elasticsearch'),
-    bind_host: bind_host,
-    elasticsearch_cluster: es_cluster,
-    elasticsearch_embedded: embedded_es,
-    es_index: es_index
-  )
-end
+unless config_templates.empty? || config_templates.nil?
+  logstash_config name do
+    templates config_templates
+    templates_cookbook = "chef-logstash-wrapper"
+    action [:create]
+    variables(
+      elasticsearch_ip: ::Logstash.service_ip(node, name, 'elasticsearch'),
+      bind_host: bind_host,
+      elasticsearch_cluster: es_cluster,
+      elasticsearch_embedded: embedded_es,
+      es_index: es_index
+      )
+  end
 # ^ see `.kitchen.yml` for example attributes to configure templates.
+end
 
 logstash_plugins 'contrib' do
   instance name
